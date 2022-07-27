@@ -9,8 +9,9 @@
     z-index: 1;
     /*Shifts form downwards*/
     top: 30px;
+    border-radius: 30px;
     background: #FFFFFF;
-    font-size: 32px;
+    font-size: 50px;
     max-width: 450px;
     height:42px;
     /*Makes box bigger*/
@@ -23,6 +24,7 @@
     position: relative;
     left: 420px;
     z-index: 1;
+    border-radius: 30px;
     /*Shifts form downwards*/
     bottom:122px;
     background: #FFFFFF;
@@ -45,8 +47,9 @@ select {
 }
 .Calculate button{
     position:relative;
-    left: 360px;
+    left: 420px;
     z-index:1;
+    border-radius: 30px;
     bottom: 155px;
     padding:50px;
     font-family: "Roboto", sans-serif;
@@ -64,4 +67,7 @@ select {
 }
 .Calculate button:hover,.Calculate button:active,.Calculate button:focus {
     background: #43A047;
+}
+.body {
+    background: orange;
 }

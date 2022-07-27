@@ -58,15 +58,15 @@ college_data = college_data.sample(frac=1).reset_index(drop=True)
 college_data = college_data.set_index('Player')
 
 
-X = college_data.drop('Drafted', axis=1) 
+X = np.array(college_data.drop('Drafted', axis=1)) 
 Y = college_data['Drafted'] 
 
 oversample = RandomOverSampler(sampling_strategy='minority')
-X_over, Y_over = oversample.fit_resample(X, Y)
+X_over, Y_over = oversample.fit_resample(X, Y.ravel())
 
 X_train, X_test, y_train, y_test = train_test_split(X_over, Y_over, test_size=0.3)
 
-mlp = MLPClassifier(hidden_layer_sizes=(3,2), activation='relu', max_iter=400)
+mlp = MLPClassifier(hidden_layer_sizes=(4,3), activation='relu', max_iter=400)
 mlp.fit(X_train,y_train)
 
 pred = mlp.predict(X_test)
