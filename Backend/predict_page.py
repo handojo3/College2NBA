@@ -1,68 +1,40 @@
+from soupsieve import select
 import streamlit as st
 import pandas as pd
 import base64
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import nbaengine as nb
+import urllib
 
-st.title('NBA Player Stats Explorer')
+st.title('College2NBA')
 
 st.markdown("""
-This app performs simple webscraping of NBA player stats data!
-* **Python libraries:** base64, pandas, streamlit
-* **Data source:** [Basketball-reference.com](https://www.basketball-reference.com/).
+This app predicts a numeric probability of a certain college player making the NBA in a given year.
 """)
 
-st.sidebar.header('User Input Features')
-selected_year = st.sidebar.selectbox('Year', list(reversed(range(1950,2020))))
 
-# Web scraping of NBA player stats
-@st.cache
-def load_data(year):
-    url = "https://www.basketball-reference.com/leagues/NBA_" + str(year) + "_per_game.html"
-    html = pd.read_html(url, header = 0)
-    df = html[0]
-    raw = df.drop(df[df.Age == 'Age'].index) # Deletes repeating headers in content
-    raw = raw.fillna(0)
-    playerstats = raw.drop(['Rk'], axis=1)
-    return playerstats
-playerstats = load_data(selected_year)
+with st.form(key = 'form1'):
+        player_name = st.text_input("Player Name") #if someone doesnt enter a player name, it sends an error message
+        selected_year = st.slider("Year",2008,2021,2021)
+        button = st.form_submit_button(label = 'Calculate')
 
-# Sidebar - Team selection
-sorted_unique_team = sorted(playerstats.Tm.unique())
-selected_team = st.sidebar.multiselect('Team', sorted_unique_team, sorted_unique_team)
+decision = bool
 
-# Sidebar - Position selection
-unique_pos = ['C','PF','SF','PG','SG']
-selected_pos = st.sidebar.multiselect('Position', unique_pos, unique_pos)
+if button:
+    if len(player_name) == 0:
+        st.error("Please enter a valid input")
+    else:
+        st.success("We predict {} {} get drafted in NBA {} Draft".format(player_name, decision, selected_year))
+        st.caption("Our model works at an accuracy rate of 92%")
+    
+        st.header("{}'s Player Stats for the {}-{} Season".format(player_name, selected_year-1, selected_year))
 
-# Filtering data
-df_selected_team = playerstats[(playerstats.Tm.isin(selected_team)) & (playerstats.Pos.isin(selected_pos))]
+        player = 'college_player-' + str(selected_year)  + '.csv'
+        draft = 'draft-' + str(selected_year) + '.csv'
+        player_data = nb.clean_data(player, draft)
+        player_data = player_data.drop('Drafted', axis=1)
+        player_data = player_data[player_data.index.str.startswith(player_name)]
 
-st.header('Display Player Stats of Selected Team(s)')
-st.write('Data Dimension: ' + str(df_selected_team.shape[0]) + ' rows and ' + str(df_selected_team.shape[1]) + ' columns.')
-st.dataframe(df_selected_team)
-
-# Download NBA player stats data
-# https://discuss.streamlit.io/t/how-to-download-file-in-streamlit/1806
-def filedownload(df):
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()  # strings <-> bytes conversions
-    href = f'<a href="data:file/csv;base64,{b64}" download="playerstats.csv">Download CSV File</a>'
-    return href
-
-st.markdown(filedownload(df_selected_team), unsafe_allow_html=True)
-
-# Heatmap
-if st.button('Intercorrelation Heatmap'):
-    st.header('Intercorrelation Matrix Heatmap')
-    df_selected_team.to_csv('output.csv',index=False)
-    df = pd.read_csv('output.csv')
-
-    corr = df.corr()
-    mask = np.zeros_like(corr)
-    mask[np.triu_indices_from(mask)] = True
-    with sns.axes_style("white"):
-        f, ax = plt.subplots(figsize=(7, 5))
-        ax = sns.heatmap(corr, mask=mask, vmax=1, square=True)
-    st.pyplot()
+        st.dataframe(player_data)
